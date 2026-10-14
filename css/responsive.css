@@ -1,0 +1,71 @@
+/* ---------- 响应式 ---------- */
+@media (max-width: 820px){
+  .keyboard{ --kw: 44px; --gap: 5px; }
+  .k-letter{ font-size: 15px; }
+  .k-code{ font-size: 8.5px; }
+  .panel{ height: 360px; padding: 18px; gap: 12px; }
+  .big{ font-size: 74px; min-height: 88px; }
+  .big.root-font{ font-size: 60px; }
+}
+@media (max-width: 680px){
+  /* 头部加入版本切换组后收紧行距与按钮尺寸，避免拥挤 */
+  header{ gap: 10px; }
+  h1{ font-size: 17px; letter-spacing: 1px; }
+  .tabs{ padding: 3px; gap: 4px; }
+  .tab{ padding: 6px 10px; font-size: 13px; }
+
+  /* 统计五块收窄后仍可单行放下（320px 窄屏自动换行） */
+  .stats{ gap: 8px; }
+  .stat{ min-width: 62px; padding: 9px 8px; }
+
+  .panel{
+    height: 460px;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .panel-main{ flex: 0 0 200px; }
+  .teach{ flex: 1 1 auto; min-height: 0; }
+  .keyboard{ --kw: 36px; --gap: 4px; }
+  .k-letter{ font-size: 13px; }
+  .k-code{ font-size: 8px; }
+  .slot{ width:42px; height:50px; font-size:20px; }
+  .big{ font-size: 62px; min-height: 72px; }
+  .big.root-font{ font-size: 52px; }
+}
+@media (max-width: 460px){
+  .keyboard{ --kw: 30px; --gap: 3px; }
+  .k-letter{ font-size: 12px; }
+  .k-code{ font-size: 7px; }
+  .key{ border-radius: 6px; border-bottom-width: 2px; border-right-width: 1.5px; }
+  .panel{ height: 420px; padding: 14px; }
+  .panel-main{ flex: 0 0 170px; }
+}
+
+/* ---------- 手机 / 触屏：键盘撑满可用宽度，方便点按虚拟按键 ----------
+   键宽 =（键盘宽度 − 9 个间隙）÷ 10，随屏幕伸缩；
+   行错位与 1 : 1.1 键帽比例保持不变；桌面端（宽屏且鼠标）不受影响 */
+@media (max-width: 680px), (pointer: coarse){
+  .keyboard{
+    width: 100%;
+    align-self: stretch;
+    container-type: inline-size;   /* 以键盘自身宽度为 cqw 基准 */
+    --kw: calc((100cqw - 9 * var(--gap)) / 10);
+  }
+  .key{
+    height: auto;
+    aspect-ratio: 10 / 11;         /* 高度改按键帽比例，避免百分比参与高度计算 */
+  }
+  .k-letter{ font-size: clamp(13px, 3.2vw, 17px); }   /* 字号随键帽适度放大 */
+  .k-code{ font-size: clamp(8px, 1.8vw, 9.5px); }
+}
+
+/* ---------- 手机：统计与操作提示移至键盘上方（键盘贴近拇指区） ----------
+   教学卡片展开时：隐藏操作提示、面板高度放开，教学信息完整展示 */
+@media (max-width: 680px){
+  .stats{ order: 3; }
+  .hint-tip{ order: 4; }
+  .keyboard{ order: 5; }
+
+  .wrap:has(.teach.show) .hint-tip{ display: none; }
+  .wrap:has(.teach.show) .panel{ height: auto; }
+}

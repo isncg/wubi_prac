@@ -1,0 +1,89 @@
+/* ============================================================
+   主面板：固定高度，内部左右两栏
+   ============================================================ */
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:22px;
+  height:380px;
+  display:flex;
+  flex-direction:row;
+  align-items:stretch;
+  gap:16px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,.45);
+}
+.panel::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(400px 180px at 50% 0%,rgba(88,166,255,.10),transparent 70%);
+  pointer-events:none;
+}
+
+/* 左栏：题目 */
+.panel-main{
+  flex:1 1 50%;
+  min-width:0;
+  touch-action: manipulation;   /* 触屏连续点按继续：消除双击缩放延迟 */
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  position:relative;
+  z-index:1;
+}
+.stage{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  width:100%;
+}
+
+.prompt{color:var(--dim);font-size:13px;letter-spacing:1px;}
+
+.big{
+  font-size:88px;line-height:1.05;font-weight:700;
+  font-family:"Kaiti SC","STKaiti","KaiTi","Songti SC",serif;
+  text-shadow:0 0 42px rgba(88,166,255,.35);
+  min-height:100px;
+  display:flex;align-items:center;justify-content:center;
+  transition:font-size .15s;
+}
+.big.root-font{
+  font-size:72px;
+  font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+  text-shadow:0 0 42px rgba(63,185,80,.35);
+}
+
+.slots{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.slot{
+  width:52px;height:60px;border-radius:10px;
+  border:2px solid var(--line);background:var(--panel2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:700;letter-spacing:1px;
+  color:var(--dim);
+  transition:.15s;
+}
+.slot.ok{border-color:var(--ok);color:var(--ok);background:rgba(63,185,80,.12);box-shadow:0 0 16px rgba(63,185,80,.25);}
+.slot.bad{border-color:var(--bad);color:var(--bad);background:rgba(248,81,73,.12);}
+.slot.next{border-color:var(--accent);box-shadow:0 0 14px rgba(88,166,255,.3);}
+.slot.reveal{
+  border-color:rgba(210,153,34,.6);
+  border-style:dashed;
+  color:var(--warn);
+  background:rgba(210,153,34,.08);
+}
+
+.feedback{
+  min-height:22px;font-size:14px;letter-spacing:.5px;
+  transition:.15s;text-align:center;line-height:1.5;
+}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);}
+
+/* 答错等待继续：题目区可点按（触屏 / 鼠标），反馈文案轻微呼吸提示 */
+.panel-main:has(.feedback.bad){ cursor: pointer; }
+.panel-main:has(.feedback.bad) .feedback{ animation: breathe 1.6s ease-in-out infinite; }

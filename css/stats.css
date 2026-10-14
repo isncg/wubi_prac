@@ -1,0 +1,13 @@
+/* ---------- 统计 ---------- */
+.stats{display:flex;gap:10px;flex-wrap:wrap;}
+.stat{
+  flex:1;min-width:80px;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:9px 12px;display:flex;flex-direction:column;gap:2px;
+}
+.stat .k{font-size:11px;color:var(--dim);letter-spacing:1px;}
+.stat .v{font-size:18px;font-weight:700;}
+.v.ok{color:var(--ok);} .v.bad{color:var(--bad);} .v.ac{color:var(--accent);}
+
+.hint-tip{font-size:12px;color:var(--dim);text-align:center;letter-spacing:.5px;line-height:1.7;}
+.hint-tip b{color:var(--warn);font-weight:600;}

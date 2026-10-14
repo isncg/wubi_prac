@@ -1,0 +1,94 @@
+/* ============================================================
+   键盘：真实 QWERTY 三行错位布局
+   彩色边框统一为「右下」：下边 3px、右边 2px
+   ============================================================ */
+.keyboard{
+  --kw: 52px;
+  --gap: 6px;
+  align-self: center;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kb-row{ display: flex; gap: var(--gap); }
+.kb-row.r2{ padding-left: calc((var(--kw) + var(--gap)) * 0.25); }
+.kb-row.r3{ padding-left: calc((var(--kw) + var(--gap)) * 0.75); }
+
+.key{
+  width: var(--kw);
+  height: calc(var(--kw) * 1.1);
+  border-radius: 8px;
+  /* 四边默认细线，随后覆盖下边、右边为彩色粗边 */
+  border: 1px solid var(--line);
+  border-bottom: 3px solid var(--zc, #37404e);   /* 下边 3px */
+  border-right:  2px solid var(--zc, #37404e);   /* 右边 2px */
+  background: linear-gradient(180deg, #1e2530, #171d26);
+  color: var(--fg);
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;   /* 触屏点按：消除双击缩放延迟 */
+  transition: .13s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0;
+  box-shadow: var(--shadow-key);
+}
+.k-letter{ font-size: 17px; font-weight: 800; line-height: 1; letter-spacing: .5px; }
+.k-code{ font-size: 9.5px; color: var(--dim); line-height: 1; letter-spacing: .5px; font-weight: 600; }
+
+.key[data-zone="1"]{ --zc:#e5534b; }
+.key[data-zone="2"]{ --zc:#d29922; }
+.key[data-zone="3"]{ --zc:#3fb950; }
+.key[data-zone="4"]{ --zc:#58a6ff; }
+.key[data-zone="5"]{ --zc:#a371f7; }
+
+/* 悬停：四边描边变亮，下/右边保持区色 */
+.key:hover{
+  border-color:#465063;
+  border-bottom-color: var(--zc, #465063);
+  border-right-color:  var(--zc, #465063);
+}
+
+/* 按下时向阴影方向位移，阴影同步收缩 */
+.key:active{
+  transform: translate(1px, 2px);
+  box-shadow: var(--shadow-key-active);
+}
+
+.key.key-unused{
+  opacity: .38;
+  cursor: not-allowed;
+  --zc: #2a313c;
+  background: linear-gradient(180deg, #14181f, #0f1218);
+  color: #5a6473;
+}
+.key.key-unused .k-code{ color: #3d444d; }
+.key.key-unused:hover{
+  border-color: var(--line);
+  border-bottom-color: var(--zc, #2a313c);
+  border-right-color:  var(--zc, #2a313c);
+}
+.key.key-unused:active{ transform: none; box-shadow: var(--shadow-key); }
+
+/* 闪烁状态：整体边框改为对应状态色，下/右边保持较粗 */
+.key.flash-ok{
+  background: rgba(63,185,80,.22); color: var(--ok);
+  border-color: var(--ok);
+  box-shadow: 2px 4px 0 rgba(63,185,80,.45);
+}
+.key.flash-ok .k-code{ color: var(--ok); }
+.key.flash-bad{
+  background: rgba(248,81,73,.22); color: var(--bad);
+  border-color: var(--bad);
+  box-shadow: 2px 4px 0 rgba(248,81,73,.45);
+}
+.key.flash-bad .k-code{ color: var(--bad); }
+.key.flash-hint{
+  background: rgba(210,153,34,.2); color: var(--warn);
+  border-color: var(--warn);
+  box-shadow: 2px 4px 0 rgba(210,153,34,.45);
+}
+.key.flash-hint .k-code{ color: var(--warn); }
