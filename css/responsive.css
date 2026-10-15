@@ -14,17 +14,20 @@
   .tabs{ padding: 3px; gap: 4px; }
   .tab{ padding: 6px 10px; font-size: 13px; }
 
-  /* 统计五块收窄后仍可单行放下（320px 窄屏自动换行） */
-  .stats{ gap: 8px; }
-  .stat{ min-width: 62px; padding: 9px 8px; }
+  /* 统计五格改为等宽网格：真机 360/375px 宽也能保证单行，不再 4+1 换行
+     （flex+min-width 在 360px 以下放不下五块；网格列永不换行） */
+  .stats{ display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .stat{ min-width: 0; padding: 9px 4px; }
+  .stat .k{ font-size: 10.5px; letter-spacing: 0; }
+  .stat .v{ font-size: 16px; }
 
+  /* 面板压缩高度：题目 + 键盘在手机首屏内完整可见，统计/说明顺延为页面底部 */
   .panel{
-    height: 460px;
+    height: 340px;
     flex-direction: column;
     gap: 12px;
   }
-  .panel-main{ flex: 0 0 200px; }
-  .teach{ flex: 1 1 auto; min-height: 0; }
+  .panel-main{ flex: 1; min-height: 0; }
   .keyboard{ --kw: 36px; --gap: 4px; }
   .k-letter{ font-size: 13px; }
   .k-code{ font-size: 8px; }
@@ -37,8 +40,7 @@
   .k-letter{ font-size: 12px; }
   .k-code{ font-size: 7px; }
   .key{ border-radius: 6px; border-bottom-width: 2px; border-right-width: 1.5px; }
-  .panel{ height: 420px; padding: 14px; }
-  .panel-main{ flex: 0 0 170px; }
+  .panel{ height: 300px; padding: 14px; }
 }
 
 /* ---------- 手机 / 触屏：键盘撑满可用宽度，方便点按虚拟按键 ----------
@@ -59,13 +61,27 @@
   .k-code{ font-size: clamp(8px, 1.8vw, 9.5px); }
 }
 
-/* ---------- 手机：统计与操作提示移至键盘上方（键盘贴近拇指区） ----------
-   教学卡片展开时：隐藏操作提示、面板高度放开，教学信息完整展示 */
-@media (max-width: 680px){
-  .stats{ order: 3; }
-  .hint-tip{ order: 4; }
-  .keyboard{ order: 5; }
-
-  .wrap:has(.teach.show) .hint-tip{ display: none; }
-  .wrap:has(.teach.show) .panel{ height: auto; }
+/* ---------- 手机 / 触屏：讲解卡改为弹窗 ----------
+   fixed 居中 + 超大 box-shadow 作全屏半透明背衬，脱离文档流、不占页面高度；
+   点按弹窗或题目区即继续下一题（见 main.js）；同时关闭面板抖动，
+   避免 transform 动画期间破坏 fixed 定位 */
+@media (max-width: 680px), (pointer: coarse){
+  .teach{
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(430px, calc(100vw - 32px));
+    max-height: min(76vh, 540px);
+    z-index: 80;
+  }
+  .teach.show{
+    animation: teachPop .18s ease;
+    box-shadow: 0 0 0 200vmax rgba(4, 8, 15, .62);   /* 全屏背衬 */
+  }
+  .panel.shake{ animation: none; }
+}
+@keyframes teachPop{
+  from{ opacity: 0; transform: translate(-50%, -47%); }
+  to{ opacity: 1; transform: translate(-50%, -50%); }
 }

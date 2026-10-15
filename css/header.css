@@ -2,9 +2,15 @@
 header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
 h1{
   font-size:19px;font-weight:700;letter-spacing:2px;
-  background:linear-gradient(90deg,#58a6ff,#3fb950);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  white-space:nowrap;
+  color:var(--fg);   /* 兜底色：不支持 background-clip:text 的引擎仍可见 */
+}
+/* 渐变字：仅在支持文字裁剪时才把字色透明，避免部分手机引擎上标题隐身 */
+@supports (-webkit-background-clip:text) or (background-clip:text){
+  h1{
+    background:linear-gradient(90deg,#58a6ff,#3fb950);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  h1{white-space:nowrap;}
 }
 .tabs{display:flex;gap:6px;background:var(--panel);padding:4px;border-radius:10px;border:1px solid var(--line);}
 .tab{

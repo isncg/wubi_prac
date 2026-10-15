@@ -54,7 +54,7 @@
           <span class="t-val roots-line">${rootsHtml}</span>
         </div>
       </div>
-      <div class="cont-hint">按 <kbd>空格</kbd> 或 <kbd>回车</kbd> 继续下一题</div>
+      <div class="cont-hint">按 <kbd>空格</kbd> / <kbd>回车</kbd>，或点按继续下一题</div>
     `;
     el.teach.classList.add('show');
   };
@@ -98,7 +98,7 @@
       </div>
       ${simpleTip}
       <div class="code-list">${items}</div>
-      <div class="cont-hint">按 <kbd>空格</kbd> 或 <kbd>回车</kbd> 继续下一题</div>
+      <div class="cont-hint">按 <kbd>空格</kbd> / <kbd>回车</kbd>，或点按继续下一题</div>
     `;
     el.teach.classList.add('show');
   };

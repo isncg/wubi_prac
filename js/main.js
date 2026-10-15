@@ -30,6 +30,13 @@
   /* ---------- 点按题目区继续（触屏 / 鼠标，对应空格 / 回车） ---------- */
   W.ui.el.panelMain.addEventListener('click', () => W.core.continueLocked());
 
+  /* ---------- 讲解卡弹窗（手机 / 触屏）：点按任意处关闭并继续下一题 ---------- */
+  W.ui.el.teach.addEventListener('click', () => {
+    if (matchMedia('(max-width: 680px), (pointer: coarse)').matches) {
+      W.core.continueLocked();
+    }
+  });
+
   /* ---------- 模式切换 ---------- */
   document.querySelectorAll('.tab[data-mode]').forEach(tab => {
     tab.addEventListener('click', () => W.core.setMode(tab.dataset.mode));
