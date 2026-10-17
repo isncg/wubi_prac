@@ -8,6 +8,10 @@
   .big.root-font{ font-size: 60px; }
 }
 @media (max-width: 680px){
+  /* 手机收窄页面左右边距（18px → 4px，约 1/4），把宽度让给键盘：
+     窄屏上键帽可点面积明显变大（360px 宽度下约 +3px/键） */
+  body{ padding: 18px 4px; }
+
   /* 头部加入版本切换组后收紧行距与按钮尺寸，避免拥挤 */
   header{ gap: 10px; }
   h1{ font-size: 17px; letter-spacing: 1px; }

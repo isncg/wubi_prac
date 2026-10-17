@@ -66,11 +66,38 @@
     const cur = state.current;
     const code = cur.code;
 
+    /* 该字是否为成字字根（本身是当前版本某键的字根）：
+       成字字根按「报户口 + 首笔 + 次笔(+末笔)」编码，各码取笔画而非字根。
+       末码性质优先用数据标志 cur.id（1 = 识别码，由码表拆分精确判定，
+       3 码 / 4 码均适用）；旧数据缺标志时退回启发式：非成字字根的 3 码字末码为识别码。 */
+    let isRootChar = false;
+    W.data.keys().forEach(k => {
+      if (k.roots.indexOf(cur.c) !== -1) isRootChar = true;
+    });
+    const isIdCode = cur.id !== undefined
+      ? cur.id === 1
+      : (!isRootChar && code.length === 3);
+
     const items = [...code].map((ch, i) => {
       const info = W.data.keyInfo(ch);
       if (!info) return '';
       const isWrong = typedStr[i] !== undefined && typedStr[i] !== ch;
       const z = W.data.ZONE_OF[ch], p = W.data.POS_OF[ch], n = W.data.ZONE_NAME_OF[ch];
+      const isLast = i === code.length - 1;
+
+      /* 末码为识别码：区位号本身就是「末笔画 × 字型」（位 1/2/3 = 左右/上下/杂合） */
+      if (isLast && isIdCode) {
+        const shape = p === 1 ? '左右型' : p === 2 ? '上下型' : '杂合型';
+        return `
+        <div class="code-item ${isWrong ? 'wrong' : ''}">
+          <span class="ci-idx">第${i + 1}码</span>
+          <span class="ci-letter">${ch}</span>
+          <span class="ci-body">
+            <span class="ci-name">识别码 · 末笔「${n}」× 字型「${shape}」</span>
+            <div class="ci-roots">不足四码时补识别码：末笔画定区、字型定位，落在 ${ch}（${z}${p}）键，并非取自该键字根</div>
+          </span>
+        </div>`;
+      }
       const posTxt = z ? `　[${z}${p} ${n}区]` : '';
       return `
         <div class="code-item ${isWrong ? 'wrong' : ''}">
@@ -87,6 +114,10 @@
       ? `<div class="tip-note">💡 这是一级简码字，只需敲击一码即可上屏。</div>`
       : '';
 
+    const rootTip = isRootChar && code.length > 1
+      ? `<div class="tip-note">💡 「${cur.c}」是成字字根：按「报户口 + 首笔 + 次笔${code.length === 4 ? ' + 末笔' : ''}」编码，各码取笔画而非字根。</div>`
+      : '';
+
     el.teach.innerHTML = `
       <div class="t-title">
         <span>✗ 编码错误</span>
@@ -97,6 +128,7 @@
         <span class="kbd-badge">${code}</span>
       </div>
       ${simpleTip}
+      ${rootTip}
       <div class="code-list">${items}</div>
       <div class="cont-hint">按 <kbd>空格</kbd> / <kbd>回车</kbd>，或点按继续下一题</div>
     `;

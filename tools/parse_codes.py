@@ -7,7 +7,10 @@
   tools/codetables/GB18030-27533.txt   98版全码表（yanhuacuo/98wubi-tables，GB18030 编码）
   tools/codetables/wubi06-CJK.txt      新世纪版全码表（CNMan/UnicodeCJK-WuBi06，UTF-8）
   tools/codetables/wubi86-CJK.txt      86版全码表（CNMan/UnicodeCJK-WuBi，UTF-8，含旧86/修正列）
-  js/data/chars.js                     app 现有 86 版字库（决定字集与顺序）
+  tools/codetables/wubi98_chai_20902.txt  98 拆分表（yanhuacuo/98wubi-unicode，PUA 字根序列，
+                                      用于判定每个字末码是「字根」还是「识别码」，id:1 标志）
+  js/data/chars.js                     app 现有字库（决定字集与顺序；读取时兼容 id:1）
+  js/data/keys.js                      各键字根表（成字字根判定用）
 
 输出：
   tools/output/chars_generated.js      新版 js/data/chars.js 内容（三版本字码表）
@@ -24,6 +27,34 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC_CHARS = ROOT / 'js' / 'data' / 'chars.js'
 DIR_TABLES = ROOT / 'tools' / 'codetables'
 DIR_OUT = ROOT / 'tools' / 'output'
+CHAI_FILE = DIR_TABLES / 'wubi98_chai_20902.txt'   # 98 拆分表（PUA 字根序列）
+
+# 键盘区位：字母 → (区号, 位号)；KEY_AT 为反查表。
+_ROWS = ['GFDSA', 'HJKLM', 'TREWQ', 'YUIOP', 'NBVCX']
+ZP = {}
+for _z, _row in enumerate(_ROWS, 1):
+    for _p, _L in enumerate(_row, 1):
+        ZP[_L] = (_z, _p)
+KEY_AT = {v: k for k, v in ZP.items()}
+
+# 末码性质人工裁定（自动化规则覆盖不到的条目）：(字, 编码) → 'ID' | '根'。
+# 裁定依据：笔画覆盖验证（字根须覆盖全部笔画、识别码不占笔画）+ 版本拆分差异
+# 考证（力/刀/戈末笔区号 86 与 98/06 规定不同；样/用在新世纪重新拆分）。
+CORRECTIONS = {
+    ('年', 'RHFK'): 'ID',  # 𠂉丨二+识别码 K(23 竖×杂合)
+    ('动', 'FCLN'): 'ID',  # 二厶力+识别码 N(51)；86 规定力末笔作折
+    ('分', 'WVB'): 'ID',   # 八刀+识别码 B(52)；86 规定刀末笔作折
+    ('战', 'HKAT'): 'ID',  # 卜口戈+识别码 T(31)；86 戈末笔取撇（98/06 取点）
+    ('毛', 'TFNV'): 'ID',  # 丿二乚+识别码 V(53 折×杂合)
+    ('样', 'SUGH'): 'ID',  # 新世纪 木丷龶+识别码 H(21)；龶=青头∈06-G
+    ('用', 'EHK'): 'ID',   # 新世纪 月丨+识别码 K(23 竖×杂合)；用非 06 字根
+    ('面', 'DMJD'): '根',  # 丆冂刂三 4 字根；识别码读法笔画覆盖不上
+    ('制', 'RMHJ'): '根',  # 𠂉冂丨刂 4 字根，末位 J=刂
+    ('使', 'WGKQ'): '根',  # 亻一口乂 4 字根，末位 Q=乂
+    ('解', 'QEVH'): '根',  # ⺈用刀+牛底字根；识别码读法余 4 笔无字根可覆盖
+    ('解', 'QEHG'): '根',  # 同上（新世纪）
+    ('样', 'SUDH'): '根',  # 木丷三丨 4 字根（书写顺序拆法，无识别码）
+}
 
 # 一级简码（86/98/新世纪三版一致，app 数据统一按简码收录）
 YIJI = {
@@ -43,7 +74,7 @@ def report(s=''):
 def load_app_chars():
     """从 js/data/chars.js 提取 (字, 86码) 有序列表。"""
     text = SRC_CHARS.read_text(encoding='utf-8')
-    pairs = re.findall(r"\{c:'(.)',code:'([A-Z]+)'\}", text)
+    pairs = re.findall(r"\{c:'(.)',code:'([A-Z]+)'(?:,id:1)?\}", text)
     if not pairs:
         sys.exit('ERROR: 未能从 js/data/chars.js 解析出字码条目')
     # 去重并保持顺序
@@ -115,6 +146,86 @@ def load_86():
     return table_old, table_98, table_06
 
 
+def load_chai():
+    """98 拆分表：'字\t[PUA字根序列…,※编码※,…]'，字根以 PUA 码位表示，
+    拆分位数与编码字母一一对应。"""
+    chai = {}
+    for ln in CHAI_FILE.read_text(encoding='utf-16').splitlines():
+        ln = ln.strip()
+        if '\t' not in ln:
+            continue
+        ch, rest = ln.split('\t', 1)
+        puas = re.findall(r'[\U000F0000-\U000FFFFD]', rest)
+        m = re.search(r'※([a-z]{1,4})※', rest)
+        if m:
+            chai[ch] = (puas, m.group(1).upper())
+    report(f'[98拆分] 共解析 {len(chai)} 字')
+    return chai
+
+
+def load_root_chars():
+    """从 js/data/keys.js 提取各版本全部字根（成字字根判定用）。"""
+    text = (ROOT / 'js' / 'data' / 'keys.js').read_text(encoding='utf-8')
+    out = {}
+    for ver in ('86', '98', '06'):
+        m = re.search(r'KEYS_%s = \[(.*?)\n  \];' % ver, text, re.S)
+        s = set()
+        for grp in re.findall(r'roots:\[(.*?)\]', m.group(1)):
+            s.update(re.findall(r"'(.)'", grp))
+        out[ver] = s
+    return out
+
+
+def calibrate_markers(chai, rc98):
+    """自校准「识别码 PUA 标记」：用全表 3 码非成字字根字（末码必为识别码）
+    的末位 PUA 投票，仅当某 (区,位) 得票 ≥80% 且 ≥5 票时认定该 PUA 为其标记。
+    预期恰好 15 种（5 区 × 3 字型）。"""
+    votes = {}
+    for ch, (puas, code) in chai.items():
+        if len(code) != 3 or len(puas) != 3 or ch in rc98:
+            continue
+        zp = ZP.get(code[2])
+        if zp is None or zp[1] > 3:
+            continue
+        votes.setdefault(puas[2], {}).setdefault(zp, 0)
+        votes[puas[2]][zp] += 1
+    markers = {}
+    for p, cnt in votes.items():
+        zp, n = max(cnt.items(), key=lambda kv: kv[1])
+        if n / sum(cnt.values()) >= 0.8 and n >= 5:
+            markers[p] = zp
+    return markers
+
+
+def last_code_kind(ver, ch, code, roots, chai, markers, csv_end):
+    """判定某条目末码是「识别码」还是「字根」，返回 'ID' / '根' / None。
+
+    规则链：人工裁定 → 成字字根（报户口+笔画） → 98 拆分表末位性质
+    （本版精确；他版编码一致时直传；编码分歧时按标记 (区,位) 反查期望识别码
+    字母做几何判定，末码 ≠ 期望字母者必为字根） → 位 4/5 必为字根。"""
+    if len(code) <= 1 or '?' in code:
+        return None
+    key = (ch, code)
+    if key in CORRECTIONS:                        # 人工裁定优先
+        return CORRECTIONS[key]
+    if ch in roots:                               # 成字字根：各码取笔画
+        return '根'
+    info = chai.get(ch)
+    if info:
+        puas, ccode = info
+        lp = puas[-1] if puas else None
+        if lp in markers:                         # 98 拆分末位 = 识别码标记
+            if ver == '98' or ccode == code:
+                return 'ID'                       # 本版精确 / 编码一致直传
+            return 'ID' if code[-1] == KEY_AT[markers[lp]] else '根'
+        if ver == '98' or ccode == code:
+            return '根'                           # 拆分末位为字根 / 编码一致直传
+    if ZP[code[-1]][1] > 3:                       # 位 4/5 不可能是识别码
+        return '根'
+    end = csv_end.get(ch)                         # 兜底：正常应已被上文覆盖
+    return 'ID?' if end == str(ZP[code[-1]][0]) else '根?'
+
+
 def code_for(ch, table, use_yiji=True):
     """取码：一级简码字按简码收录，其余取全码；返回 (最终码, 表中全码)。"""
     full = table.get(ch)
@@ -131,6 +242,17 @@ def main():
     t98 = load_98()
     t06 = load_06()
     t86_old, t86_98, t86_06 = load_86()
+
+    # ---------- 末码性质判定（识别码 vs 字根）准备 ----------
+    chai = load_chai()
+    roots = load_root_chars()
+    markers = calibrate_markers(chai, roots['98'])
+    report(f'[98拆分] 识别码标记校准: {len(markers)} 种（预期 15 = 5 区 × 3 字型）')
+    csv_end = {}
+    for line in (DIR_TABLES / 'wubi86-CJK.txt').read_text(encoding='utf-8').splitlines():
+        p = line.split(',')
+        if len(p) >= 6 and len(p[1]) == 1 and p[5]:
+            csv_end[p[1]] = p[5][-1]
 
     # ---------- 交叉验证：两个独立来源的 98 / 新世纪 码表 ----------
     report()
@@ -201,26 +323,34 @@ def main():
         lines = []
         for i in range(0, len(entries), per_line):
             chunk = entries[i:i + per_line]
-            lines.append('    ' + ''.join("{c:'%s',code:'%s'}," % (c, k) for c, k in chunk))
+            cells = ["{c:'%s',code:'%s',id:1}," % (c, k) if kind == 'ID'
+                     else "{c:'%s',code:'%s'}," % (c, k)
+                     for c, k, kind in chunk]
+            lines.append('    ' + ''.join(cells))
         return '\n'.join(lines)
 
-    def build_version(name, table, use_yiji=True):
+    def build_version(ver, table, use_yiji=True):
         out, missing = [], []
         for ch, _ in app:
             final, full = code_for(ch, table, use_yiji)
             if final is None:
                 missing.append(ch)
                 final = '?' * 1  # 占位，生成后需人工检查
-            out.append((ch, final))
+            kind = last_code_kind(ver, ch, final, roots[ver], chai, markers, csv_end)
+            if kind in ('ID?', '根?'):
+                report(f'  !! 兜底触发 {ver} {ch}{final} → {kind}（应人工复核）')
+            out.append((ch, final, kind))
         return out, missing
 
-    v86 = [(ch, code) for ch, code in app]
+    v86, m86 = build_version('86', dict(app))   # 86 以 app 现有码为码表
     v98, m98 = build_version('98', t98)
     v06, m06 = build_version('06', t06)
 
     js = f'''/* ============================================================
  * 数据层：单字编码库（86 版 / 98 版 / 新世纪版）
  * 字集与顺序沿用原 86 版字库；一级简码字按简码收录（三版一致）。
+ * 条目中 id:1 表示末码为「识别码」（非字根），由 98 拆分表 + 区位几何
+ * + 人工裁定共同判定，教学卡片据此区分末码性质。
  * 98 版编码取自 yanhuacuo/98wubi-tables「GB18030-27533.txt」全码表；
  * 新世纪版编码取自 CNMan/UnicodeCJK-WuBi06「CJK.txt」全码表。
  * 本文件由 tools/parse_codes.py 生成（{len(app)} 字 / 版本），请勿手工增删条目。
@@ -243,9 +373,21 @@ def main():
   }};
 }})(window.Wubi = window.Wubi || {{}});
 '''
+    # ---------- 末码性质统计 ----------
+    report()
+    report('== 末码性质统计（id:1 = 末码为识别码）==')
+    for name, vers in (('86', v86), ('98', v98), ('06', v06)):
+        n_id = sum(1 for _, _, k in vers if k == 'ID')
+        n_root = sum(1 for _, _, k in vers if k == '根')
+        report(f'  {name}: 识别码 {n_id} / 字根 {n_root} / 简码等 {len(vers) - n_id - n_root}')
+        report('    识别码字: ' + ' '.join(f'{c}{k}' for c, k, kind in vers if kind == 'ID'))
+    corr_used = {(c, k) for c, k, kind in v86 + v98 + v06 if (c, k) in CORRECTIONS}
+    report(f'  人工裁定生效: {len(corr_used)}/{len(CORRECTIONS)} 条')
+
     DIR_OUT.mkdir(parents=True, exist_ok=True)
     (DIR_OUT / 'chars_generated.js').write_text(js, encoding='utf-8')
     report()
+    report('86 生成占位(缺失): ' + (''.join(m86) if m86 else '无'))
     report('98 生成占位(缺失): ' + (''.join(m98) if m98 else '无'))
     report('06 生成占位(缺失): ' + (''.join(m06) if m06 else '无'))
     report('已生成 tools/output/chars_generated.js')
