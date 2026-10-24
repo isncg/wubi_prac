@@ -55,6 +55,24 @@
     setTimeout(W.ui.clearFeedback, 900);
   });
 
+  /* ---------- 文章选择（文章模式下显示的下拉列表） ---------- */
+  const textSelect = W.ui.el.textSelect;
+  W.data.texts().forEach((t, i) => {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = t.name;
+    textSelect.appendChild(opt);
+  });
+  textSelect.addEventListener('change', () => W.core.loadTextIndex(+textSelect.value));
+  /* 点按下拉列表不冒泡到题目区，避免误触「继续 / 下一题」 */
+  textSelect.addEventListener('click', (e) => e.stopPropagation());
+
+  /* ---------- 重开本篇（重新选当前文章，从头开始） ---------- */
+  W.ui.el.textRestart.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (state.mode === 'text') W.core.loadTextIndex(state.textIndex);
+  });
+
   /* ---------- 初始化 ----------
      先恢复上次使用的版本，再建键盘（键名/提示随版本）与出题 */
   const ver0 = W.data.loadVersion();

@@ -29,4 +29,9 @@
   W.core.buildCharPool = function () {
     return W.core.shuffle(W.data.chars());
   };
+
+  /* 文章题池：打乱的文章索引（逐篇弹出） */
+  W.core.buildTextPool = function () {
+    return W.core.shuffle(W.data.texts().map((_, i) => i));
+  };
 })(window.Wubi = window.Wubi || {});

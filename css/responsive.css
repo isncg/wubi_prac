@@ -38,6 +38,11 @@
   .slot{ width:42px; height:50px; font-size:20px; }
   .big{ font-size: 62px; min-height: 72px; }
   .big.root-font{ font-size: 52px; }
+  .ticker{ font-size: 18px; letter-spacing: 1px; }
+
+  /* 文章下拉列表收窄：长文名（如「邹忌讽齐王纳谏 · 《战国策》」）不溢出 */
+  .text-picker{ flex-wrap:wrap; }
+  .text-picker select{ max-width: 100%; font-size: 12px; padding: 4px 26px 4px 10px; }
 }
 @media (max-width: 460px){
   .keyboard{ --kw: 30px; --gap: 3px; }

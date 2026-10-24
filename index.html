@@ -15,6 +15,7 @@
     <div class="tabs">
       <button class="tab active" data-mode="root">字根练习</button>
       <button class="tab" data-mode="char">单字练习</button>
+      <button class="tab" data-mode="text">文章练习</button>
     </div>
     <div class="tabs tabs--ver" role="group" aria-label="五笔版本切换">
       <button class="tab tab--ver active" data-ver="86" title="五笔字型 86 版（1986）">86版</button>
@@ -33,9 +34,14 @@
       </div>
 
       <div id="stageChar" class="stage hidden">
-        <div class="prompt">请敲出这个字的五笔编码</div>
+        <div class="text-picker hidden" id="textPicker">
+          <select id="textSelect" aria-label="选择文章"></select>
+          <button class="picker-restart" id="textRestart" title="从本篇开头重新开始" aria-label="重新开始本篇">↺</button>
+        </div>
+        <div class="prompt" id="charPrompt">请敲出这个字的五笔编码</div>
         <div class="big" id="charDisplay">—</div>
         <div class="slots" id="slots"></div>
+        <div class="ticker hidden" id="textTicker"></div>
       </div>
 
       <div class="feedback" id="feedback"></div>
@@ -57,13 +63,16 @@
   <div class="hint-tip">
     直接敲键盘字母键作答 · 无需切换输入法<br>
     键帽下方数字为「区号+位号」· 顶部可切换 86 / 98 / 新世纪版字库<br>
-    答错后按 <b>空格</b> / <b>回车</b>，或点按讲解卡 / 题目区继续
+    答错后按 <b>空格</b> / <b>回车</b>，或点按讲解卡 / 题目区继续（文章模式无需按键，续输更正）；<br>
+    文章模式中淡出的标点等无编码字符自动跳过 · ↺ 从本篇开头重新开始
   </div>
 </div>
 
 <!-- 静态脚本：defer 保证按书写顺序执行，可直接双击 index.html 运行 -->
 <script src="js/data/keys.js" defer></script>
 <script src="js/data/chars.js" defer></script>
+<script src="js/data/codes.js" defer></script>
+<script src="js/data/texts.js" defer></script>
 <script src="js/core/state.js" defer></script>
 <script src="js/core/pools.js" defer></script>
 <script src="js/ui/elements.js" defer></script>

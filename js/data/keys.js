@@ -126,6 +126,26 @@
   W.data.keys = function () { return KEY_TABLES[W.data.ver]; };
   W.data.chars = function () { return W.data.CHARS[W.data.ver] || []; };
 
+  /* 单字 → 编码条目快速索引（文章模式逐字取码用，惰性构建） */
+  let CHAR_MAP = null;
+  W.data.charMap = function () {
+    if (!CHAR_MAP) {
+      CHAR_MAP = {};
+      W.data.chars().forEach(e => { CHAR_MAP[e.c] = e; });
+    }
+    return CHAR_MAP;
+  };
+
+  /* 字 → 编码条目（文章模式逐字取码）：练习字库优先（简码 / 识别码标志齐全），
+     字库外的字查文章补充码表 codes.js；标点等无编码字符返回 null。 */
+  W.data.entryFor = function (c) {
+    const lib = W.data.charMap()[c];
+    if (lib) return lib;
+    const art = W.data.ARTCODES && W.data.ARTCODES[W.data.ver];
+    const code = art && art[c];
+    return code ? { c: c, code: code } : null;
+  };
+
   /* 版本显示名，如 verLabel() → '86版' */
   W.data.verLabel = function (id) {
     const v = VERSIONS.find(x => x.id === (id || W.data.ver));
@@ -136,6 +156,7 @@
   W.data.setVersion = function (id) {
     if (!KEY_TABLES[id]) return false;
     W.data.ver = id;
+    CHAR_MAP = null;   /* 单字索引随版本失效 */
     try { localStorage.setItem('wubi_ver', id); } catch (e) { /* 隐私模式等场景忽略 */ }
     return true;
   };
